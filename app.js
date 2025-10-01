@@ -1,0 +1,55 @@
+
+import express from "express"
+import helmet from "helmet"
+import cors from 'cors'
+import { errorMiddleware } from "./middlewares/error.js"
+import dotenv from "dotenv"
+import { connectDB } from "./lib/db.js"
+import { v2 as cloudinary } from 'cloudinary'
+import userRoute from './routes/user.js'
+import productRoute from './routes/product.js'
+import orderRoute from './routes/order.js'
+
+cloudinary.config({
+  cloud_name: 'dfkekq3ls',
+  api_key: '418476412835677',
+  api_secret: 'SiFNimmisDZS6G5StbIdrAeGPZk',
+});
+
+dotenv.config({ path: './.env', });
+
+export const envMode = process.env.NODE_ENV?.trim() || 'DEVELOPMENT';
+const port = process.env.PORT || 3000;
+
+const mongoURI = process.env.MONGO_URI;
+
+connectDB(mongoURI);
+
+const app = express();
+
+app.use(
+  helmet({
+    contentSecurityPolicy: envMode !== "DEVELOPMENT",
+    crossOriginEmbedderPolicy: envMode !== "DEVELOPMENT",
+  })
+);
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cors({ origin: ' * ', credentials: true }));
+
+
+app.get('/', (req, res) => {
+  res.send('Hello, World!');
+});
+
+app.use("/api/user", userRoute);
+app.use("/api/product", productRoute);
+app.use("/api/order", orderRoute);
+
+// your routes here
+
+
+app.use(errorMiddleware);
+
+app.listen(port, () => console.log('Server is working on Port:' + port + ' in ' + envMode + ' Mode.'));
